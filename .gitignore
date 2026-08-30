@@ -1,0 +1,31 @@
+# ==========================================
+# Official Terraform .gitignore Template
+# ==========================================
+
+# Local .terraform directory (contains downloaded provider binaries and modules)
+**/.terraform/*
+
+# .tfstate files (contains plain-text secrets and state history)
+*.tfstate
+*.tfstate.*
+
+# Crash log files
+crash.log
+crash.*.log
+
+# Exclude all .tfvars files (contain environment-specific sensitive variables)
+*.tfvars
+*.tfvars.json
+
+# Ignore override files (used for local modifications)
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Include tfplan files (ignore plan output files to prevent secret leakage)
+*tfplan*
+
+# Ignore CLI configuration files
+.terraformrc
+terraform.rc
