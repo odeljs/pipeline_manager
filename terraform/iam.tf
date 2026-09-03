@@ -27,18 +27,23 @@ data "aws_iam_policy_document" "codepipeline_policy" {
       "s3:GetBucketVersioning",
       "s3:PutObjectAcl",
       "s3:PutObject",
+      "s3:GetBucketLocation",
+      "s3:GetObjectTagging",
+      "s3:GetObjectVersionTagging"
     ]
 
     resources = [
-      aws_s3_bucket.codepipeline_bucket.arn,
-      "${aws_s3_bucket.codepipeline_bucket.arn}/*"
+      aws_s3_bucket.teraform_plan_artifacts_bucket.arn,
+      "${aws_s3_bucket.teraform_plan_artifacts_bucket.arn}/*",
+      aws_s3_bucket.teraform_plan_input_bucket.arn,
+      "${aws_s3_bucket.teraform_plan_input_bucket.arn}/*"
     ]
   }
 
   statement {
     effect    = "Allow"
     actions   = ["codestar-connections:UseConnection"]
-    resources = [data.code_connection.arn]
+    resources = [data.aws_codestarconnections_connection.code_connection.arn]
   }
 
   statement {
