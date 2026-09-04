@@ -4,6 +4,11 @@ resource "aws_codepipeline" "codepipeline" {
   pipeline_type  = "V2"
   execution_mode = "PARALLEL"
 
+  variable {
+    name          = "OUTPUT_BUCKET_KEY"
+    description   = "The S3 key location for the terraform plan output" 
+  }
+
   artifact_store {
     location = aws_s3_bucket.teraform_plan_artifacts_bucket.bucket
     type     = "S3"
@@ -46,7 +51,14 @@ resource "aws_codepipeline" "codepipeline" {
       version          = "1"
 
       configuration = {
-        ProjectName = "test"
+        ProjectName = aws_codebuild_project.tf_plan_codebuild.name
+        EnvironmentVariables = jsonencode([
+          {
+            name  = "OUTPUT_BUCKET_KEY"
+            value = "#{variables.OUTPUT_BUCKET_KEY}"
+            type  = "PLAINTEXT"
+          }
+        ])
       }
     }
   }
