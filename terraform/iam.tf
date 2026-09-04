@@ -66,3 +66,42 @@ resource "aws_iam_role_policy" "codepipeline_policy" {
 
 ##########################################################
 
+#################Eventbridge CodePipeline Permissions#################
+data "aws_iam_policy_document" "assume_role_eventbridge" {
+  statement {
+    effect = "Allow"
+
+    principals {
+      type        = "Service"
+      identifiers = ["events.amazonaws.com"]
+    }
+
+    actions = ["sts:AssumeRole"]
+  }
+}
+
+resource "aws_iam_role" "eventbridge_to_pipeline_role" {
+  name               = "eventbridge_pipeline_role"
+  assume_role_policy = data.aws_iam_policy_document.assume_role_eventbridge.json
+}
+
+data "aws_iam_policy_document" "eventbridge_codepipeline_policy" {
+
+  statement {
+    effect = "Allow"
+
+    actions = [
+      "codepipeline:StartPipelineExecution"
+    ]
+
+    resources = ["*"]
+  }
+}
+
+resource "aws_iam_role_policy" "codepipeline_policy" {
+  name   = "eventbridge_codepipeline_policy"
+  role   = aws_iam_role.eventbridge_to_pipeline_role.id
+  policy = data.aws_iam_policy_document.eventbridge_codepipeline_policy.json
+}
+
+######################################################################
