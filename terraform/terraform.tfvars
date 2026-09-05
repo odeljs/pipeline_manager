@@ -1,1 +1,0 @@
-code_connection_arn = "arn:aws:codeconnections:us-east-1:934747883004:connection/9766a7c0-d0ae-418e-9683-d47555d3b2a1"

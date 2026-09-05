@@ -1,0 +1,14 @@
+[
+  {
+    "name": "repo_name",
+    "description": "",
+    "repo_path": "org_repo/name",
+    "output_bucket_key": "bucket_key"
+  },
+  {
+    "name": "repo_name_1",
+    "description": "",
+    "repo_path": "org_repo/name_1",
+    "output_bucket_key": "bucket_key_1"
+  }
+]
