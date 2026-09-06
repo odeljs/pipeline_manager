@@ -2,21 +2,16 @@ version: 0.2
 
 env: 
   parameter-store:
-    TERRAFORM_VERSION: /CodeBuild/pipeline_manager/terraform_version
+    TF_VERSION: /CodeBuild/pipeline_manager/terraform_version
     GITHUB_SSH_KEY: /CodeBuild/github/ssh_key
 
 phases:
   install:
     commands:
       - echo Entered the install phase
-      - apt-get update -y
-      - echo Upgrading aws-cli to version 2
-      - curl "https://amazonaws.com" -o "awscliv2.zip"
-      - unzip -q awscliv2.zip
-      - ./aws/install --update
-      - aws --version
+      - yum update -y
       - echo installing terraform version $TERRAFORM_VERSION
-      - curl -s -O "https://hashicorp.com{TF_VERSION}/terraform_${TF_VERSION}_linux_amd64.zip"
+      - curl -s -O "https://releases.hashicorp.com/terraform/${TF_VERSION}/terraform_${TF_VERSION}_linux_amd64.zip"
       - unzip -q "terraform_${TF_VERSION}_linux_amd64.zip"
       - mv terraform /usr/local/bin/
       - rm "terraform_${TF_VERSION}_linux_amd64.zip"
@@ -25,14 +20,12 @@ phases:
     commands:
       - echo Setting up Git SSH credentials...
       - mkdir -p ~/.ssh
-      - echo "$SSH_KEY" > ~/.ssh/id_rsa
+      - eval $(ssh-agent -s)
+      - aws ssm get-parameter --name "/CodeBuild/github/ssh_key" --with-decryption --query "Parameter.Value" --output text > ~/.ssh/id_rsa
       - chmod 600 ~/.ssh/id_rsa
+      - ssh-add ~/.ssh/id_rsa
       - ssh-keyscan -t rsa github.com >> ~/.ssh/known_hosts
-      - echo Extracting bucket and key from source version...
-      - BUCKET=$(echo $CODEBUILD_SOURCE_VERSION | cut -d ':' -f 6 | cut -d '/' -f 1)
-      - KEY=$(echo $CODEBUILD_SOURCE_VERSION | cut -d ':' -f 6 | cut -d '/' -f 2-)
-      - REPO_PATH=$(aws s3api head-object --bucket $BUCKET --key "$KEY" --query "Metadata.\"repo-path\"" --output text)
-      - echo This payload came from repository -> $REPO_PATH
+      - echo This payload came from repository $REPO_PATH
       - echo Cloning Repo $REPO_PATH
       - git clone git@github.com:$REPO_PATH.git 
     
