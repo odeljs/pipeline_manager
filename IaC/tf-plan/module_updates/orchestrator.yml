@@ -1,0 +1,63 @@
+version: 0.2
+
+batch:
+  fast-fail: false 
+  build-matrix:
+    static:
+      env:
+        variables:
+          SSM_BASE_PATH: "/terraform/modules"
+          BRANCH_NAME: "dev" 
+    dynamic:
+      env:
+        variables:
+          APP_REPO:
+            - "frontend-service-infra"
+            - "data-warehouse-infra"
+            - "payment-gateway-infra"
+            - "core-networking-infra"
+
+phases:
+  install:
+    runtime-versions:
+      terraform: 1.x
+  pre_build:
+    commands:
+      - echo "Setting up runner lane for GitHub repository -> $APP_REPO"
+      - aws codebuild-git-credentials --action-token --provider github
+      - git clone https://github.com target-repo
+      - cd target-repo
+
+      - echo "Scanning application configuration code for local module version variables..."
+      - DETECTED_MODULES=$(grep -hRo 'var\.[a-zA-Z0-9_-]*_version' . | sed 's/var.//;s/_version//;s/_/-/g' | sort -u || true)
+      
+      - |
+        if [ -n "$DETECTED_MODULES" ]; then
+          for MODULE_NAME in $DETECTED_MODULES; do
+            SSM_PARAM_PATH="${SSM_BASE_PATH}/${MODULE_NAME}/${BRANCH_NAME}/version"
+            
+            if NEW_VERSION=$(aws ssm get-parameter --name "$SSM_PARAM_PATH" --query "Parameter.Value" --output text 2>/dev/null); then
+              echo "✅ Using test version for ${MODULE_NAME}: ${NEW_VERSION}"
+            else
+              PROD_PATH="${SSM_BASE_PATH}/${MODULE_NAME}/production/version"
+              NEW_VERSION=$(aws ssm get-parameter --name "$PROD_PATH" --query "Parameter.Value" --output text)
+              echo "⚠️ No test version found. Using prod version for ${MODULE_NAME}: ${NEW_VERSION}"
+            fi
+            
+            TF_VAR_NAME="TF_VAR_$(echo $MODULE_NAME | tr '-' '_')_version"
+            export "$TF_VAR_NAME"="$NEW_VERSION"
+          done
+        fi
+        
+      - |
+        cat <<EOF > backend-test.tfbackend
+        backend "local" {
+          path = "test.tfstate"
+        }
+        EOF
+  build:
+    commands:
+      - echo "🚀 Running dry-run plan on $APP_REPO..."
+      - terraform init -backend-config="backend-test.tfbackend" -reconfigure -upgrade
+      - terraform plan -lock=false -out=tfplan.binary
+      - terraform show -no-color tfplan.binary
