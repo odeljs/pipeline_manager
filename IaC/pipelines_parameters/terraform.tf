@@ -1,18 +1,18 @@
 terraform {
-  required_version = ">= 1.5.0"
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = "~> 5.0"
+      version = "~> 6.0"
     }
   }
   backend "s3" {
     bucket = "hashi-terraform-states"
-    key    = "pipeline_manager/IaC/tf-plan/module_updates/terraform.tfstate"
+    key    = "pipeline_manager/IaC/pipelines_parameters/terraform.tfstate"
     region = "us-east-1"
   }
 }
 
+# Configure the AWS Provider
 provider "aws" {
   region = "us-east-1"
 
@@ -23,5 +23,4 @@ provider "aws" {
       Source      = "pipeline_manager" 
     }
   }
-  
 }

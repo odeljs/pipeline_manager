@@ -1,0 +1,8 @@
+[
+  {
+    "name": "test_cicd",
+    "description": "repo to test cicd setup.",
+    "repo_path": "odeljs/test_cicd",
+    "output_bucket_key": "test_cicd"
+  }
+]

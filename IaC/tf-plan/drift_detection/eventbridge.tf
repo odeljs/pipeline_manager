@@ -6,7 +6,7 @@ resource "aws_cloudwatch_event_rule" "cron_drift_detection" {
   name        = "tfplan-cron-drift-detection"
   description = "Triggers the TF plan on a schedule to detect drift"
   
-  schedule_expression = "rate(5 minutes)"#cron for once a day"cron(0 0 * * ? *)"
+  schedule_expression = "cron(0 0 * * ? *)"
 }
 
 resource "aws_cloudwatch_event_target" "codepipeline_target" {
@@ -23,7 +23,7 @@ resource "aws_cloudwatch_event_target" "codepipeline_target" {
       },
       {
         name  = "OUTPUT_BUCKET_KEY"
-        value = each.value.output_bucket_key # Or any static/dynamic value you need
+        value = each.value.output_bucket_key
       }
     ]
   })
